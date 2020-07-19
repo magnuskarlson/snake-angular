@@ -1,0 +1,18 @@
+canvas {
+    border: 1px solid black;
+    background: white;
+}
+
+.con {
+    display: flex;
+    justify-content: center;
+}
+
+.con-75 {
+    background: #fcba03;
+    box-sizing: border-box;
+    text-align: center;
+    padding: 10px;
+    width: 75%;
+    border-radius: 20px;
+}
