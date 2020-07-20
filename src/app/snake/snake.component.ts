@@ -12,18 +12,20 @@ export class SnakeComponent implements OnInit {
   keys: string[] = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
   width: number;
   height: number;
-  delta = 25;
+  delta = 10;
   cubes = [];
+  food = [];
+  points = 0;
 
   constructor() { }
 
   @HostListener('document:keydown', ['$event'])
   handleDeleteKeyboardEvent(event: KeyboardEvent) {
     if(this.keys.includes(event.key)){
-      if(event.key == 'ArrowRight')this.moveCube(1, 0);
-      if(event.key == 'ArrowLeft')this.moveCube(-1, 0);
-      if(event.key == 'ArrowUp')this.moveCube(0, -1);
-      if(event.key == 'ArrowDown')this.moveCube(0, 1);
+      if(event.key == 'ArrowRight')this.moveCube(this.delta, 0);
+      if(event.key == 'ArrowLeft')this.moveCube(-this.delta, 0);
+      if(event.key == 'ArrowUp')this.moveCube(0, -this.delta);
+      if(event.key == 'ArrowDown')this.moveCube(0, this.delta);
     }
   }
 
@@ -31,9 +33,10 @@ export class SnakeComponent implements OnInit {
     this.ctx = this.canvas.nativeElement.getContext('2d');
     this.width = this.canvas.nativeElement.width;
     this.height = this.canvas.nativeElement.height;
-    for(let i = 9; i >= 0; i--){
-      this.cubes.push([i, 0]);
+    for(let i = 1; i >= 0; i--){
+      this.cubes.push([i * this.delta, 0]);
     }
+    this.genFood();
     this.drawCubes();
   }
 
@@ -42,9 +45,11 @@ export class SnakeComponent implements OnInit {
   }
 
   moveCube(x, y){
-    let posX = (this.cubes[0][0] + x) * this.delta, posY = (this.cubes[0][1] + y) * this.delta;
+    let posX = this.cubes[0][0] + x, posY = this.cubes[0][1] + y;
     if(posX < 0 || posX >= this.width || posY < 0 || posY >= this.height)return;
     let last = [...this.cubes[0]], pos = [];
+    if(this.cubes.some(e => e[0] == this.cubes[0][0] + x && e[1] == this.cubes[0][1] + y))return;
+
     this.cubes.forEach((e,i) => {
       if(i == 0){
         e[0] += x;
@@ -56,19 +61,38 @@ export class SnakeComponent implements OnInit {
         last = [...pos];
       }
     });
+
+    if(this.food[0] == this.cubes[0][0] && this.food[1] == this.cubes[0][1]){
+      this.points += 1;
+      this.cubes.push([...last]);
+      this.genFood();
+    }
+
     this.drawCubes();
+  }
+
+  getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  genFood(){
+    this.food = [this.getRandomInt(0, this.width / this.delta) * this.delta, this.getRandomInt(0, this.height/this.delta) * this.delta];
   }
 
   drawCubes(){
     this.clear();
     this.cubes.forEach((e, i) => {
       this.drawCube(e[0], e[1], i == 0 ? 'red' : 'black');
-    })
+    });
+
+    this.drawCube(this.food[0], this.food[1], 'green');
   }
 
   drawCube(x, y, color){
     this.ctx.beginPath();
-    this.ctx.rect(x * this.delta, y * this.delta, this.delta, this.delta);
+    this.ctx.rect(x, y, this.delta, this.delta);
     this.ctx.fillStyle = color;
     this.ctx.fill();
   }
